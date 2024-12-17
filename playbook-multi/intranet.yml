@@ -1,0 +1,53 @@
+---
+- name: enable intranet services
+  hosts: servera.lab.example.com
+  become: True
+  tasks:
+
+    - name: check httpd and firewall packages
+      ansible.builtin.dnf:
+        state: latest
+        name: 
+          - httpd
+          - firewalld
+
+    - name: index.html content
+      ansible.builtin.copy:
+        content: "Welcome to the intranet"
+        dest: /var/www/html/index.html 
+
+    - name: firewalld running and enabled
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: yes
+
+    - name: port 80
+      ansible.posix.firewalld:
+        service: http
+        permanent: yes
+        state: enabled
+        immediate: true
+
+    - name: httpd running and enabled
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: yes
+
+- name: test intranet
+  hosts: workstation.lab.example.com
+  become: false
+  tasks:
+
+  - name: test web server
+    ansible.builtin.uri:
+      url: http://servera.lab.example.com
+      return_content: yes
+      status_code: 200
+    register: results
+
+  - name: print test result
+    debug:
+      var: results.content
+

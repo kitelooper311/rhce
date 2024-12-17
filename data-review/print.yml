@@ -1,0 +1,11 @@
+---
+- name: debug
+  hosts: webserver
+  gather_facts: yes
+  tasks:
+    - name: print
+      debug:
+        msg: |
+          "{{ ansible_facts['ansible_fqdn'] }} 
+          {{ ansible_facts['ansible_default_ipv4']['address'] }}
+          has been customized by Ansible."

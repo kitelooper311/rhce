@@ -1,0 +1,11 @@
+---
+- name: check httpd status
+  hosts: webserver
+  tasks:
+    - name: check status
+      ansible.builtin.command: systemctl status httpd
+      register: result
+
+    - name: print
+      ansible.builtin.debug:
+        var: result

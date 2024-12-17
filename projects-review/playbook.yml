@@ -1,0 +1,18 @@
+---
+- name: Install and configure web service
+  hosts: server*.lab.example.com
+
+  tasks:
+
+    - name: import web tasks
+      ansible.builtin.include_tasks: tasks/web_tasks.yml
+
+    - name: import firewall tasks
+      ansible.builtin.import_tasks: tasks/firewall_tasks.yml
+
+  handlers:
+
+    - name: restart httpd
+      ansible.builtin.service:
+        name: httpd
+        state: restarted

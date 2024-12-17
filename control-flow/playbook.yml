@@ -1,0 +1,22 @@
+---
+- name: mariadb server is running
+  hosts: database_dev
+  become: true
+  vars:
+    mariadb_packages:
+      - mariadb-server
+      - python3-PyMySQL
+
+  tasks:
+    - name: install pkgs
+      ansible.builtin.dnf:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ mariadb_packages }}"
+      when: ansible_facts['distribution'] == "RedHat"
+
+    - name: service
+      ansible.builtin.service:
+        name: mariadb
+        state: started
+        enabled: true

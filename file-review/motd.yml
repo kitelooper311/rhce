@@ -1,0 +1,41 @@
+---
+- name: create system
+  hosts: all
+  become: true
+  remote_user: devops
+
+  tasks:
+
+    - name: create the /etc/motd file
+      ansible.builtin.template:
+        src: templates/motd.j2
+        dest: /etc/motd
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: check that /etc/motd exists
+      register: motdcheck
+      ansible.builtin.stat:
+        path: /etc/motd
+
+    - name: check the stats of the /etc/motd file
+      ansible.builtin.debug:
+        var: motdcheck
+
+    - name: create /etc/issue
+      ansible.builtin.copy:
+        src: files/issue
+        dest: /etc/issue
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: ensure that /etc/issue.net is a symlink to /etc/issue
+      ansible.builtin.file:
+        src: /etc/issue
+        dest: /etc/issue.net
+        state: link
+        owner: root
+        group: root
+        force: true

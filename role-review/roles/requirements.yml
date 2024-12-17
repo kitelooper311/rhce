@@ -1,0 +1,4 @@
+- name: infra.apache
+  src: git@workstation.lab.example.com:infra/apache
+  version: v1.4
+  scm: git

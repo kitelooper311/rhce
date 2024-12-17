@@ -1,0 +1,45 @@
+---
+- name: preparing servers
+  hosts: servers
+
+  tasks:
+
+    - name: fetch the /var/log/secure log file from managed hosts
+      ansible.builtin.fetch:
+        src: /var/log/secure
+        dest: secure-backups
+    
+    - name: ensure the /home/devops/files directory exists
+      ansible.builtin.file:
+        path: /home/devops/files
+        state: directory
+        owner: devops
+        group: devops
+        mode: 0775
+        setype: _default
+
+    - name: add a single line of text to a file
+      ansible.builtin.lineinfile:
+        path: /home/devops/files/users.txt
+        line: This line was added by the lineinfile module
+        state: present
+        create: true
+        owner: devops
+        group: devops
+        mode: 0644
+
+    - name: copy a file to managed hosts and set ownership and permissions
+      ansible.builtin.copy:
+        src: system
+        dest: /home/devops/files/
+        owner: devops
+        group: devops
+        mode: 0644
+
+    - name: add a block of text to an existing file
+      ansible.builtin.blockinfile:
+        path: /home/devops/files/users.txt
+        block: |
+          This block of text consists of two lines
+          They have been added by the blockinfile module
+        state: present

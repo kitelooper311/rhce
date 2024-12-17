@@ -1,0 +1,56 @@
+---
+- name: deploy and start Apache
+  hosts: webserver
+  become: true
+
+  vars:
+    web_pkg: httpd
+    firewall_pkg: firewalld
+    web_service: httpd
+    firewall_service: firewalld
+    rule: http
+
+  tasks:
+  
+  - name: install packages
+    ansible.builtin.dnf:
+      name: 
+        - "{{ web_pkg }}"
+        - "{{ firewall_pkg }}"
+      state: latest
+
+  - name: start/enable {{ web_pkg }}
+    ansible.builtin.service:
+      name: "{{ web_pkg }}"
+      state: started
+      enabled: true
+
+  - name: start/enable {{ firewall_pkg}}
+    ansible.builtin.service:
+      name: "{{ firewall_pkg }}"
+      state: started
+      enabled: true
+
+  - name: web content
+    ansible.builtin.copy:
+     content: "example web content"
+     dest: /var/www/html/index.html
+
+  - name: port 80 open
+    ansible.posix.firewalld:
+      service: http
+      permanent: true
+      state: enabled
+      immediate: true
+
+- name: verify Apache
+  hosts: workstation
+  become: false
+
+  tasks:
+
+  - name: check webserver
+    ansible.builtin.uri:
+      url: http://servera.lab.example.com
+      return_content: true
+      status_code: 200

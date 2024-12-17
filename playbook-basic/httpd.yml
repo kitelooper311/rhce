@@ -1,0 +1,22 @@
+---
+- name: httpd play
+  hosts: web
+  become: True
+  
+  tasks:
+
+  - name: install httpd package
+    ansible.builtin.dnf:
+      name: httpd
+      state: present
+
+  - name: copy file
+    ansible.builtin.copy:
+      src: files/index.html
+      dest: /var/www/html/index.html
+
+  - name: service start enable
+    ansible.builtin.service:
+      name: httpd
+      state: started
+      enabled: yes

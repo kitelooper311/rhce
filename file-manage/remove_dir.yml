@@ -1,0 +1,10 @@
+---
+- name: use the file module to remove a directory
+  hosts: servers
+
+  tasks:
+
+    - name: remove a directory 
+      ansible.builtin.file:
+        path: /home/devops/files
+        state: absent

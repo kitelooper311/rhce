@@ -1,0 +1,42 @@
+---
+- name: Configure Dev Web Server
+  hosts: dev_webserver
+  force_handlers: true
+
+  pre_tasks:
+    - name: Verify SELinux configuration
+      block:
+      - name: apply SELinux role
+        ansible.builtin.include_role:
+          name: redhat.rhel_system_roles.selinux
+
+      #- name: enable SELinux
+      #  ansible.posix.selinux:
+      #    policy: "{{ selinux_policy }}"
+      #    state: "{{ selinux_state }}"
+
+      #- name: set SELinux ports
+      #  loop: "{{ selinux_ports[0]['ports'] }}"
+      #  redhat.rhel_system_roles.seport:
+      #    ports: "{{ item }}"
+      #    proto: "{{ selinux_ports[0]['proto'] }}"
+      #    setype: "{{ selinux_ports[0]['setype'] }}" 
+      #    state: "{{ selinux_ports[0]['state'] }}"
+
+      rescue:
+      - name: SELinux failures
+        ansible.builtin.fail:
+          msg: "SELinux role failed"
+        when: not selinux_reboot_required
+
+      - name: Restart managed host
+        ansible.builtin.reboot:
+          msg: "Ansible rebooting system for updates"
+
+      - name: Reapply SElinux role to complete changes
+        ansible.builtin.include_role:
+          name: redhat.rhel_system_roles.selinux
+         
+
+  roles:
+    - apache.developer_configs

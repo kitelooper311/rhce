@@ -1,0 +1,55 @@
+---
+- name: Install and configure web service
+  hosts: server*.lab.exampl.com
+
+  tasks:
+    - name: Install httpd
+      ansible.builtin.dnf:
+        name: httpd
+        state: latest
+
+    - name: Enable and start httpd
+      ansible.builtin.service:
+        name: httpd
+        enabled: true
+        state: started
+
+    - name: Tuning configuration installed
+      ansible.builtin.copy:
+        src: files/tune.conf
+        dest: /etc/httpd/conf.d/tune.conf
+        owner: root
+        group: root
+        mode: 0644
+      notify:
+        - restart httpd
+
+    - name: Deploy index page
+      ansible.builtin.copy:
+        content: |
+          This is {{ ansible_facts['fqdn'] }}.
+        dest: /var/www/html/index.html
+
+    - name: Install firewalld
+      ansible.builtin.dnf:
+        name: firewalld
+        state: latest
+
+    - name: Enable and start the firewall
+      ansible.builtin.service:
+        name: firewalld
+        enabled: true
+        state: started
+
+    - name: Open the port for http
+      ansible.posix.firewalld:
+        service: http
+        immediate: true
+        permanent: true
+        state: enabled
+
+  handlers:
+    - name: restart httpd
+      ansible.builtin.service:
+        name: httpd
+        state: restarted

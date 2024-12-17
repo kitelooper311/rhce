@@ -1,0 +1,13 @@
+---
+- name: pkg
+  hosts: localhost
+  become: false
+  tasks:
+
+  - name: get pkg
+    ansible.builtin.package_facts:
+      manager: auto
+
+  - name: print pkg facts
+    ansible.builtin.debug:
+      var: ansible_facts.packages

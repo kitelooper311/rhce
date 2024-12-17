@@ -1,0 +1,108 @@
+---
+- name: configure web server
+  hosts: webserver
+  become: true
+  vars:
+    firewall_pkg: firewalld
+    firewall_svc: firewalld
+    web_pkg: httpd
+    web_svc: httpd
+    ssl_pkg: mod_ssl
+    httpdconf_src: files/httpd.conf
+    httpdconf_dest: /etc/httpd/conf/httpd.conf
+    htaccess_src: files/.htaccess
+    secrets_dir: /etc/httpd/secrets
+    secrets_src: files/htpasswd
+    secrets_dest: "{{ secrets_dir }}/htpasswd"
+    web_root: /var/www/html
+
+  tasks:
+    - name: install packages
+      ansible.builtin.dnf:
+        name: 
+          - "{{ web_pkg }}"
+          - "{{ firewall_pkg }}"
+          - "{{ ssl_pkg }}"
+        state: latest
+
+    - name: copy web files
+      ansible.builtin.copy:
+        src: "{{ httpdconf_src }}"
+        dest: "{{ httpdconf_dest }}"
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: create dir
+      ansible.builtin.file:
+        state: directory
+        path: "{{ secrets_dir }}"
+        owner: apache
+        group: apache
+        mode: 0500
+
+    - name: add htpasswd file
+      ansible.builtin.copy:
+        src: "{{ secrets_src }}"
+        dest: "{{ secrets_dest }}"
+        owner: apache
+        group: apache
+        mode: 0400
+
+    - name: .htaccess
+      ansible.builtin.copy:
+        src: "{{ htaccess_src }}"
+        dest: "{{ web_root }}/.htaccess"
+        owner: apache
+        group: apache
+        mode: 0400
+
+    - name: index.html
+      ansible.builtin.copy:
+        content: >
+          "{{ ansible_facts['fqdn'] }}
+          ({{ ansible_facts['default_ipv4']['address'] }}) 
+          has been customized by Ansible."
+        dest: "{{ web_root }}/index.html"
+
+    - name: httpd service
+      ansible.builtin.service:
+        name: "{{ web_svc }}"
+        state: started
+        enabled: true
+
+    - name: firewall service
+      ansible.builtin.service:
+        name: "{{ firewall_svc }}"
+        state: started
+        enabled: true
+
+    - name: firewall ports
+      ansible.posix.firewalld:
+        service: https
+        immediate: true
+        state: enabled
+        permanent: true
+
+- name: test web server
+  hosts: workstation
+  become: false
+  vars:
+    web_user: guest
+  vars_files:
+    - vars/secret.yml
+  tasks:
+    - name: test the web server 
+      ansible.builtin.uri:
+        url: https://serverb.lab.example.com
+        return_content: true
+        status_code: 200
+        user: "{{ web_user }}"
+        password: "{{ web_pass }}"
+        force_basic_auth: true
+        validate_certs: false
+      register: auth_test
+
+    - name: print web body
+      ansible.builtin.debug:
+        var: auth_test['content']

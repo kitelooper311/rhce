@@ -1,0 +1,16 @@
+---
+- name: display specific facts
+  hosts: webserver
+  tasks:
+    - name: display specifc facts
+      ansible.builtin.debug:
+        msg: >-
+          Host '{{ ansible_facts["fqdn"] }}' with Python
+          version '{{ ansible_facts["python_version"] }}'
+          has '{{ ansible_facts["processor_count"] }}'
+          processors and '{{ ansible_facts["memtotal_mb"] }}'
+          MiB of total system memory.
+
+    - name: display local var
+      ansible.builtin.debug:
+        var: ansible_facts["ansible_local"]
